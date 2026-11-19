@@ -10,23 +10,19 @@ jobs:
       - name: Setup
         run: |
           sudo apt-get update && sudo apt-get install -y bc bison build-essential ccache curl flex git gnupg gperf imagemagick liblz4-tool libncurses5-dev libssl-dev libxml2 libxml2-utils lzop pngcrush rsync schedtool squashfs-tools xsltproc zip zlib1g-dev clang lld llvm gcc-aarch64-linux-gnu gcc-arm-linux-gnueabi
-          git clone --depth=1 https://github.com drivers/net/wireless/rtl8188fu
-          echo 'obj-$(CONFIG_RTL8188FU) += rtl8188fu/' >> drivers/net/wireless/Makefile
-          sed -i '/endif/i source "drivers/net/wireless/rtl8188fu/Kconfig"' drivers/net/wireless/Kconfig
-          sed -i 's/CONFIG_PLATFORM_I386_PC = y/CONFIG_PLATFORM_I386_PC = n/g' drivers/net/wireless/rtl8188fu/Makefile
-          sed -i 's/CONFIG_PLATFORM_ARM_RPI = n/CONFIG_PLATFORM_ARM_RPI = y/g' drivers/net/wireless/rtl8188fu/Makefile
       - name: Compile
         run: |
           export ARCH=arm64 SUBARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi-
           make O=out CC=clang exynos7885-a10_defconfig
+          ./scripts/config --file out/.config -e CONFIG_RTL8XXXU -e CONFIG_RTL8XXXU_UNTESTED -e CONFIG_RTL8188FU -e CONFIG_RTL8188EU -e CONFIG_RTL8812AU -e CONFIG_CFG80211 -e CONFIG_MAC80211 -e CONFIG_USB_NET_DRIVERS
+          make O=out CC=clang olddefconfig
           make -j$(nproc --all) O=out CC=clang Image
       - name: Zip
         run: |
-          git clone --depth=1 https://github.com anykernel
-          cp out/arch/arm64/boot/Image anykernel/
-          cd anykernel && zip -r9 ../A10-Kernel.zip * -x .git README.md *placeholder
+          mkdir -p zip_out
+          cp out/arch/arm64/boot/Image zip_out/
+          cd zip_out && zip -r9 ../A10-Kernel-Image.zip *
       - uses: actions/upload-artifact@v4
         with:
           name: A10-Kernel
-          path: A10-Kernel.zip
-
+          path: A10-Kernel-Image.zip
