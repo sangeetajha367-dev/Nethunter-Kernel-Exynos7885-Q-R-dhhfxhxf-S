@@ -33,4 +33,4 @@ jobs:
         with:
           name: Neternels-A10-WiFi
           path: Neternels-A10-WiFi.zip
-concurrency:
+
